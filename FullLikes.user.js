@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Full Likes
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Restore full like counts.
 // @author       BowDown097
 // @match        *://*.youtube.com/*
@@ -31,11 +31,21 @@ function waitForElement(selector) {
 }
 
 // thanks objectful
-async function getLikes() {
+function getLikes() {
     const topLevelButtons = document.querySelector("ytd-app").data.response.contents.twoColumnWatchNextResults.results.results.contents[0].videoPrimaryInfoRenderer.videoActions.menuRenderer.topLevelButtons[0];
     const buttonText = topLevelButtons.isToggled ? topLevelButtons.toggleButtonRenderer.toggledText : topLevelButtons.toggleButtonRenderer.defaultText;
-    const likes = parseInt(buttonText.accessibility.accessibilityData.label.replace(/( likes|,)/g, "")).toLocaleString();
-    document.querySelector("yt-formatted-string#text.ytd-toggle-button-renderer").innerHTML = likes;
+    const likes = parseInt(buttonText.accessibility.accessibilityData.label.replace(/( likes|,)/g, ""));
+    const likesTextElm = document.querySelector("yt-formatted-string#text.ytd-toggle-button-renderer");
+    likesTextElm.innerHTML = likes.toLocaleString();
+
+    document.querySelector("ytd-toggle-button-renderer.style-scope:nth-child(1)").addEventListener("click", function() {
+        const liked = likesTextElm.classList.contains("style-default-active");
+        if (liked) {
+            likesTextElm.innerHTML = (likes + 1).toLocaleString();
+        } else {
+            likesTextElm.innerHTML = likes.toLocaleString();
+        }
+    }, false);
 }
 
 async function getDislikes(elm) {
@@ -44,23 +54,26 @@ async function getDislikes(elm) {
     let response = await fetch(`https://returnyoutubedislikeapi.com/votes?videoId=${videoId}`).then((response) => response.json()).catch();
     if (response === undefined || "traceId" in response) return;
 
+    const dislikeText = document.querySelector("ytd-toggle-button-renderer.style-scope:nth-child(2) > a:nth-child(1) > yt-formatted-string:nth-child(2)");
     if (response.dislikes == 0 && response.likes == 0 && response.viewCount == 0) { // no ratings
-        document.querySelector("ytd-toggle-button-renderer.style-scope:nth-child(2) > a:nth-child(1) > yt-formatted-string:nth-child(2)").innerHTML = "";
-        document.querySelector("yt-formatted-string#text.ytd-toggle-button-renderer").innerHTML = "";
+        dislikeText.innerHTML = "";
     } else { // we have ratings!
-        document.querySelector("ytd-toggle-button-renderer.style-scope:nth-child(2) > a:nth-child(1) > yt-formatted-string:nth-child(2)").innerHTML = response.dislikes.toLocaleString();
+        dislikeText.innerHTML = response.dislikes.toLocaleString();
+        document.querySelector("ytd-toggle-button-renderer.style-scope:nth-child(2)").addEventListener("click", async function() {
+            const disliked = dislikeText.classList.contains("style-default-active");
+            if (disliked) {
+                dislikeText.innerHTML = (response.dislikes + 1).toLocaleString();
+            } else {
+                dislikeText.innerHTML = response.dislikes.toLocaleString();
+            }
+        }, false);
     }
 }
 
 async function setupCounts()
 {
-    waitForElement('#top-row.ytd-video-secondary-info-renderer').then(function(elm) {
-        getLikes();
-    });
-
-    waitForElement(".ryd-tooltip-bar-container").then(function(elm) {
-        getDislikes();
-    });
+    waitForElement('#top-row.ytd-video-secondary-info-renderer').then(() => getLikes());
+    waitForElement(".ryd-tooltip-bar-container").then(() => getDislikes());
 }
 
 (function() {
