@@ -93,7 +93,7 @@ function setupNavbar() {
     window.addEventListener("yt-page-data-updated", setupNavbar, false);
     GM_addStyle(`
 .ytcp-main-appbar {
-    margin: -12px;
+	margin: -12px;
 	width: 100%;
 	text-align: center;
 	line-height: 40px;
@@ -142,8 +142,8 @@ html[dark] .ytcp-main-appbar {
 	line-height: 40px;
 	height: 40px;
 	background-color: var(--yt-spec-brand-background-primary);
-    border-bottom: 1px solid var(--yt-spec-10-percent-layer);
-    border-left: 1px solid var(--yt-spec-10-percent-layer);
+	border-bottom: 1px solid var(--yt-spec-10-percent-layer);
+	border-left: 1px solid var(--yt-spec-10-percent-layer);
 	position: fixed;
 	z-index: 2001;
 	font-size: 13px;
