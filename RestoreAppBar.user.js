@@ -142,6 +142,8 @@ html[dark] .ytcp-main-appbar {
 	line-height: 40px;
 	height: 40px;
 	background-color: var(--yt-spec-brand-background-primary);
+    border-bottom: 1px solid var(--yt-spec-10-percent-layer);
+    border-left: 1px solid var(--yt-spec-10-percent-layer);
 	position: fixed;
 	z-index: 2001;
 	font-size: 13px;
