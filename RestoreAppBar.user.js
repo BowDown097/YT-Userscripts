@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Restore App Bar
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Restores the appbar used in the classic Hitchhiker YouTube layout
 // @author       BowDown097 and whoever made it originally
 // @match        https://www.youtube.com/*
@@ -18,6 +18,24 @@ if (typeof GM_addStyle !== "function") {
         if (head) head.appendChild(style);
         else document.documentElement.appendChild(style);
     }
+}
+
+function waitForElement(selector) {
+    return new Promise(resolve => {
+        if (document.querySelector(selector)) {
+            return resolve(document.querySelector(selector));
+        }
+        const observer = new MutationObserver(mutations => {
+            if (document.querySelector(selector)) {
+                resolve(document.querySelector(selector));
+                observer.disconnect();
+            }
+        });
+        observer.observe(document, {
+            childList: true,
+            subtree: true
+        });
+    });
 }
 
 function navigate(url, browseId) {
@@ -42,12 +60,13 @@ function navigate(url, browseId) {
 }
 
 function navBar() {
+    const hasMyChannel = document.querySelector("#items > ytd-guide-entry-renderer:nth-child(2) .guide-icon").getComputedStyleValue("content") == "url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAOFJREFUeJztlL0Ng0AMhWlSZ5QMkU0o6KjpIlLAHSNkgkyQLbICA6RPT/hEAk8WxwWJKoolS5Z/3vnZhiT5y0cuvtiXZXny3t/run6i2PiIrQKrqvPROdf22gW0JWcN2FhMV3mRH1BsjUVBoaKd9TQ7pYeNTztdpM98tAPmZnPwaQ41QUBLaaDl0mkcLrVxaoKA9nUtmnssxCIG2DZNc0PnNr8IqF0AwGZtDr43eJyyLOWRZdkulEeMnOhS9Gx0GVZkOctnMyRPh93P5wpFOkKx8X192AZ0m09P6W/2c/hteQFIL1T2NRIk0wAAAABJRU5ErkJggg==\")";
     let headers = [{
-        text: "Home"
+        text: document.querySelector("ytd-guide-entry-renderer:first-child yt-formatted-string").innerHTML
     }, {
-        text: "Trending"
+        text: hasMyChannel ? document.querySelector("ytd-guide-entry-renderer:nth-child(3) yt-formatted-string").innerHTML : document.querySelector("ytd-guide-entry-renderer:nth-child(2) yt-formatted-string").innerHTML
     }, {
-        text: "Subscriptions"
+        text: hasMyChannel ? document.querySelector("ytd-guide-entry-renderer:nth-child(5) yt-formatted-string").innerHTML : document.querySelector("ytd-guide-entry-renderer:nth-child(4) yt-formatted-string").innerHTML
     }];
     
     let appbar = document.createElement("div");
@@ -84,7 +103,7 @@ function navBar() {
 
 function setupNavbar() {
     if (!["/", "/feed/trending", "/feed/subscriptions"].includes(window.location.pathname)) return;
-    navBar();
+    waitForElement("ytd-guide-entry-renderer").then(() => navBar());
     document.querySelector("[hidden] .ytcp-main-appbar")?.remove();
 }
 
@@ -93,7 +112,7 @@ function setupNavbar() {
     window.addEventListener("yt-page-data-updated", setupNavbar, false);
     GM_addStyle(`
 .ytcp-main-appbar {
-	margin: -12px;
+    margin: -12px;
 	width: 100%;
 	text-align: center;
 	line-height: 40px;
@@ -142,8 +161,8 @@ html[dark] .ytcp-main-appbar {
 	line-height: 40px;
 	height: 40px;
 	background-color: var(--yt-spec-brand-background-primary);
-	border-bottom: 1px solid var(--yt-spec-10-percent-layer);
-	border-left: 1px solid var(--yt-spec-10-percent-layer);
+    border-bottom: 1px solid var(--yt-spec-10-percent-layer);
+    border-left: 1px solid var(--yt-spec-10-percent-layer);
 	position: fixed;
 	z-index: 2001;
 	font-size: 13px;
