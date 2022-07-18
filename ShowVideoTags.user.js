@@ -7,6 +7,7 @@
 // @author      BowDown097
 // @description Shows YouTube video tags in the description.
 // @icon        https://www.google.com/s2/favicons?domain=youtube.com
+// @homepageURL https://github.com/BowDown097/YT-Userscripts
 // ==/UserScript==
 
 function createDescriptionSection(items, tags) {
